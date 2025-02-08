@@ -1,0 +1,10 @@
+{
+    "name": "svn-hooks",
+    "private": true,
+    "dependencies": {
+        "conventional-commits-parser": "^3.2.4",
+        "semver": "^7.5.4",
+        "simple-git": "^3.19.1",
+        "xml2js": "^0.6.2"
+    }
+}
