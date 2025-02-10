@@ -475,21 +475,24 @@ function findSvnHooksDir(startPath) {
   let currentPath = startPath;
 
   while (currentPath && currentPath !== path.parse(currentPath).root) {
+    const svnDirPath = path.join(currentPath, '.svn'); // 检查.svn目录
+    if (fs.existsSync(svnDirPath) && fs.lstatSync(svnDirPath).isDirectory()) {
+      // 如果找到了.svn目录，则在此目录下查找hooks目录
+      const svnHooksPath = path.join(currentPath, svnHookDirName);
+      if (fs.existsSync(svnHooksPath) && fs.lstatSync(svnHooksPath).isDirectory()) {
+        return currentPath; // 返回找到hooks目录的路径
+      } else {
+        return null; // 如果存在.svn但不存在hooks目录，返回null
+      }
+    }
+
     const svnHooksPath = path.join(currentPath, svnHookDirName);
-    if (
-      fs.existsSync(svnHooksPath) &&
-      fs.lstatSync(svnHooksPath).isDirectory()
-    ) {
+    if (fs.existsSync(svnHooksPath) && fs.lstatSync(svnHooksPath).isDirectory()) {
       return currentPath;
     }
+
     // Move up one directory level
     currentPath = path.dirname(currentPath);
-  }
-
-  // Check root directory last
-  const svnHooksPath = path.join(currentPath, svnHookDirName);
-  if (fs.existsSync(svnHooksPath) && fs.lstatSync(svnHooksPath).isDirectory()) {
-    return currentPath;
   }
 
   return null; // If not found
