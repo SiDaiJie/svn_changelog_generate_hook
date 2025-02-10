@@ -17,13 +17,15 @@ if (!cwdPath || !fs.existsSync(cwdPath)) {
   process.exit(1);
 }
 // 查找包含 svnHookDirName 的目录
-svnHooksDir = findSvnHooksDir(cwdPath);
-if (!svnHooksDir) {
+const result = findSvnHooksDir(cwdPath);
+
+if (!result.found) {
   logger.error(
-    `未在目录 ${cwdPath} 或其父目录中找到包含 ${svnHookDirName} 的 目录`
+    `未在目录 ${cwdPath} 或其父目录 ${result.path} 中找到包含 ${svnHookDirName} 的 目录`
   );
   process.exit(1);
 } else {
+  svnHooksDir = result.path;
   logger.warn(
     `找到包含 ${svnHookDirName} 的目录: ${svnHooksDir}, 请确保这是正确的仓库路径。`
   );
@@ -475,28 +477,38 @@ function findSvnHooksDir(startPath) {
   let currentPath = startPath;
 
   while (currentPath && currentPath !== path.parse(currentPath).root) {
-    const svnDirPath = path.join(currentPath, '.svn'); // 检查.svn目录
-    if (fs.existsSync(svnDirPath) && fs.lstatSync(svnDirPath).isDirectory()) {
+    const svnDirPath = path.join(currentPath, ".svn"); // 检查.svn目录
+    if (
+      fs.existsSync(svnDirPath) 
+      && fs.lstatSync(svnDirPath).isDirectory()
+    ) {
       // 如果找到了.svn目录，则在此目录下查找hooks目录
       const svnHooksPath = path.join(currentPath, svnHookDirName);
-      if (fs.existsSync(svnHooksPath) && fs.lstatSync(svnHooksPath).isDirectory()) {
-        return currentPath; // 返回找到hooks目录的路径
+      if (
+        fs.existsSync(svnHooksPath) &&
+        fs.lstatSync(svnHooksPath).isDirectory()
+      ) {
+        return { found: true, path: currentPath }; // 返回找到hooks目录的路径
       } else {
-        return null; // 如果存在.svn但不存在hooks目录，返回null
+        return { found: false, path: currentPath }; // 如果存在.svn但不存在hooks目录，返回null
       }
     }
 
     const svnHooksPath = path.join(currentPath, svnHookDirName);
-    if (fs.existsSync(svnHooksPath) && fs.lstatSync(svnHooksPath).isDirectory()) {
-      return currentPath;
+    if (
+      fs.existsSync(svnHooksPath) &&
+      fs.lstatSync(svnHooksPath).isDirectory()
+    ) {
+      return currentPath, currentPath;
     }
 
     // Move up one directory level
     currentPath = path.dirname(currentPath);
   }
 
-  return null; // If not found
+  return { found: false, path: currentPath }; // If not found
 }
+
 
 function getSvnLogs(startRevision = 1) {
   try {
