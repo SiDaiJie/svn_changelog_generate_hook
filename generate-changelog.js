@@ -499,7 +499,7 @@ function findSvnHooksDir(startPath) {
       fs.existsSync(svnHooksPath) &&
       fs.lstatSync(svnHooksPath).isDirectory()
     ) {
-      return currentPath, currentPath;
+      return { found: true, path: currentPath };
     }
 
     // Move up one directory level
